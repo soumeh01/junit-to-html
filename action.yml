@@ -1,0 +1,67 @@
+name: 'MCU Build Action'
+description: 'Composite Action for building MCU tools'
+inputs:
+  target:
+    description: 'Product to be build e.g. buildmgr'
+    required: true
+  build_target:
+    description: 'Build Type e.g. Release, Debug. Default: Release'
+    required: false
+    default: 'Release'
+  generator:
+    description: 'Build generator e.g. Ninja'
+    required: false
+    default: 'Ninja'
+runs:
+  using: "composite"
+  steps:
+    - name: Install macOS deps
+      if: ${{ startsWith(runner.os, 'macOS') }}
+      shell: bash
+      run: |
+        brew install \
+          ninja
+    - name: Install linux deps
+      if: ${{ startsWith(runner.os, 'Linux') }}
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt-get install \
+          bc \
+          build-essential \
+          ninja-build
+    - name: Install Windows deps
+      if: ${{ startsWith(runner.os, 'Windows') }}
+      shell: powershell
+      run: choco install -y ninja
+
+    - name: Create build folder
+      shell: bash
+      run: mkdir build
+
+    - name: Configure Windows build for amd64
+      if: ${{ startsWith(runner.os, 'Windows') }}
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+
+    - uses: ammaraskar/gcc-problem-matcher@master
+      if: ${{ startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux') }}
+    - uses: ammaraskar/msvc-problem-matcher@master
+      if: ${{ startsWith(runner.os, 'Windows') }}
+
+    - name: Build ${{ inputs.target }}
+      if: ${{ startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux') }}
+      shell: bash
+      run: |
+        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
+        cmake --build . --target ${{ inputs.target }}
+      working-directory: ./build
+
+    - name: Build ${{ inputs.target }}
+      if: ${{ startsWith(runner.os, 'Windows') }}
+      shell: powershell
+      run: |
+        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
+        cmake --build . --target ${{ inputs.target }}
+      working-directory: ./build
