@@ -1,5 +1,4 @@
-MCU Build GitHub Action
-
+# MCU Build GitHub Action
 ## Usage
 
 ```yaml
