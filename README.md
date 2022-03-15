@@ -23,7 +23,7 @@ with:
 ## Example
 ```yaml
 - name: Build libdsq
-  uses: Arm-Debug/mcu-build-action@main
+  uses: Arm-Debug/mcu-build-action@v1.0
   id: mcu-build
   with:
     target: dsq
