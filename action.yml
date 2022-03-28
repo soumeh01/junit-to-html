@@ -2,7 +2,7 @@ name: 'MCU Build Action'
 description: 'Composite Action for building MCU tools'
 inputs:
   arch:
-    description: 'arch is either amd64 (default) or `aarch64`. If `aarch64` is cross-compiled from x86'.
+    description: 'arch is either amd64 (default) or `aarch64`. If `aarch64` is cross-compiled from x86.'
     required: false
     default: 'amd64'
   build_target:
