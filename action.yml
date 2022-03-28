@@ -1,10 +1,10 @@
 name: 'MCU Build Action'
 description: 'Composite Action for building MCU tools'
 inputs:
-  also_linux_aarch64:
-    description: 'Beside build linux x86, cross-compile aarch64 target'
+  arch:
+    description: 'arch is either amd64 (default) or `aarch64`. If `aarch64` is cross-compiled from x86'.
     required: false
-    default: 'false'
+    default: 'amd64'
   build_target:
     description: 'Build Type e.g. Release, Debug. Default: Release'
     required: false
@@ -25,6 +25,7 @@ runs:
       run: |
         brew install \
           ninja
+
     - name: Install linux deps
       if: ${{ startsWith(runner.os, 'Linux') }}
       shell: bash
@@ -34,8 +35,9 @@ runs:
           bc \
           build-essential \
           ninja-build
-    - name: Install linux cross-compile deps
-      if: ${{ startsWith(runner.os, 'Linux') && inputs.also_linux_aarch64 == 'true' }}
+
+    - name: Install linux aarch64 deps
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.arch == 'aarch64' }}
       shell: bash
       run: |
         sudo apt update
@@ -55,11 +57,6 @@ runs:
       shell: bash
       run: mkdir build
 
-    - name: Create build folder for aarch64
-      if: ${{ startsWith(runner.os, 'Linux') && inputs.also_linux_aarch64 == 'true' }}
-      shell: bash
-      run: mkdir build_arm
-
     - name: Configure Windows build for amd64
       if: ${{ startsWith(runner.os, 'Windows') }}
       uses: ilammy/msvc-dev-cmd@v1
@@ -71,21 +68,21 @@ runs:
     - uses: ammaraskar/msvc-problem-matcher@master
       if: ${{ startsWith(runner.os, 'Windows') }}
 
-    - name: Build ${{ inputs.target }}
-      if: ${{ startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux') }}
+    - name: Build ${{ inputs.target }} ${{ inputs.arch }}
+      if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') && inputs.arch == 'amd64') }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./build
 
-    - name: Build ${{ inputs.target }} for aarch64
-      if: ${{ startsWith(runner.os, 'Linux') && inputs.also_linux_aarch64 == 'true' }}
+    - name: Build ${{ inputs.target }} ${{ inputs.arch }}
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.arch == 'aarch64' }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
         cmake --build . --target ${{ inputs.target }}
-      working-directory: ./build_arm
+      working-directory: ./build
 
     - name: Build ${{ inputs.target }}
       if: ${{ startsWith(runner.os, 'Windows') }}
