@@ -82,7 +82,7 @@ runs:
       working-directory: ./build
 
     - name: Build ${{ inputs.target }} cross-compile
-      if: startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
