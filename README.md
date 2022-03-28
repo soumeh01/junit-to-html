@@ -4,15 +4,15 @@
 ```yaml
 uses: Arm-Debug/mcu-build-action@v1.1
 with:
+    # Beside build linux x86, cross-compile aarch64 target
+    # Optional arg
+    # Default: 'false'
+    also_linux_aarch64: ''
+
     # Build Type e.g. Release, Debug
     # Optional arg
     # Default: 'Release'
     build_target: ''
-
-    # cross-compile target to linux aarch64
-    # Optional arg
-    # Default: 'false'
-    cross_compile_linux_aarch64: ''
 
     # Build generator e.g. Ninja'
     # Optional arg
@@ -23,13 +23,12 @@ with:
     # Required arg
     # Default: ''
     target: ''
-
 ```
 
 ## Example
 ```yaml
 - name: Build libdsq
-  uses: Arm-Debug/mcu-build-action@v1.0
+  uses: Arm-Debug/mcu-build-action@v1.1
   id: mcu-build
   with:
     target: dsq

@@ -1,14 +1,14 @@
 name: 'MCU Build Action'
 description: 'Composite Action for building MCU tools'
 inputs:
+  also_linux_aarch64:
+    description: 'Beside build linux x86, cross-compile aarch64 target'
+    required: false
+    default: 'false'
   build_target:
     description: 'Build Type e.g. Release, Debug. Default: Release'
     required: false
     default: 'Release'
-  cross_compile_linux_aarch64:
-    description: 'aarch64 cross-compile target'
-    required: false
-    default: 'false'
   generator:
     description: 'Build generator e.g. Ninja'
     required: false
@@ -35,7 +35,7 @@ runs:
           build-essential \
           ninja-build
     - name: Install linux cross-compile deps
-      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.also_linux_aarch64 == 'true' }}
       shell: bash
       run: |
         sudo apt update
@@ -56,7 +56,7 @@ runs:
       run: mkdir build
 
     - name: Create build folder for aarch64
-      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.also_linux_aarch64 == 'true' }}
       shell: bash
       run: mkdir build_arm
 
@@ -80,7 +80,7 @@ runs:
       working-directory: ./build
 
     - name: Build ${{ inputs.target }} for aarch64
-      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.also_linux_aarch64 == 'true' }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
