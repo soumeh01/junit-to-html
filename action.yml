@@ -72,7 +72,7 @@ runs:
       if: ${{ startsWith(runner.os, 'Windows') }}
 
     - name: Build ${{ inputs.target }}
-      if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') }}
+      if: ${{ startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux') }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
