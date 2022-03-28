@@ -26,7 +26,7 @@ runs:
         brew install \
           ninja
     - name: Install linux deps
-      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'false' }}
+      if: ${{ startsWith(runner.os, 'Linux') }}
       shell: bash
       run: |
         sudo apt update
@@ -72,14 +72,14 @@ runs:
       if: ${{ startsWith(runner.os, 'Windows') }}
 
     - name: Build ${{ inputs.target }}
-      if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'false') }}
+      if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./build
 
-    - name: Build ${{ inputs.target }} cross-compile for aarch64
+    - name: Build ${{ inputs.target }} for aarch64
       if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
       shell: bash
       run: |
