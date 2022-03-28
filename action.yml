@@ -1,17 +1,21 @@
 name: 'MCU Build Action'
 description: 'Composite Action for building MCU tools'
 inputs:
-  target:
-    description: 'Product to be build e.g. buildmgr'
-    required: true
   build_target:
     description: 'Build Type e.g. Release, Debug. Default: Release'
     required: false
     default: 'Release'
+  cross_compile_linux_aarch64:
+    description: 'aarch64 cross-compile target'
+    required: false
+    default: 'false'
   generator:
     description: 'Build generator e.g. Ninja'
     required: false
     default: 'Ninja'
+  target:
+    description: 'Product to be build e.g. buildmgr'
+    required: true
 runs:
   using: "composite"
   steps:
@@ -30,6 +34,17 @@ runs:
           bc \
           build-essential \
           ninja-build
+    - name: Install linux cross-compile deps
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt-get install \
+          bc \
+          build-essential \
+          ninja-build \
+          gcc-aarch64-linux-gnu \
+          g++-aarch64-linux-gnu
     - name: Install Windows deps
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
@@ -63,5 +78,13 @@ runs:
       shell: powershell
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
+        cmake --build . --target ${{ inputs.target }}
+      working-directory: ./build
+
+    - name: Build ${{ inputs.target }} cross-compile
+      if: startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
+      shell: bash
+      run: |
+        cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./build
