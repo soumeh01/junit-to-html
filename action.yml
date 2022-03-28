@@ -26,7 +26,7 @@ runs:
         brew install \
           ninja
     - name: Install linux deps
-      if: ${{ startsWith(runner.os, 'Linux') }}
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'false' }}
       shell: bash
       run: |
         sudo apt update
@@ -45,12 +45,19 @@ runs:
           ninja-build \
           gcc-aarch64-linux-gnu \
           g++-aarch64-linux-gnu
+
     - name: Install Windows deps
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
       run: choco install -y ninja
 
     - name: Create build folder
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'false' }}
+      shell: bash
+      run: mkdir build
+
+    - name: Create build folder for aarch64
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
       shell: bash
       run: mkdir build
 
@@ -66,10 +73,18 @@ runs:
       if: ${{ startsWith(runner.os, 'Windows') }}
 
     - name: Build ${{ inputs.target }}
-      if: ${{ startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux') }}
+      if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'false') }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
+        cmake --build . --target ${{ inputs.target }}
+      working-directory: ./build
+
+    - name: Build ${{ inputs.target }} cross-compile for aarch64
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
+      shell: bash
+      run: |
+        cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./build
 
@@ -81,10 +96,3 @@ runs:
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./build
 
-    - name: Build ${{ inputs.target }} cross-compile
-      if: ${{ startsWith(runner.os, 'Linux') && inputs.cross_compile_linux_aarch64 == 'true' }}
-      shell: bash
-      run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
-        cmake --build . --target ${{ inputs.target }}
-      working-directory: ./build
