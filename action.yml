@@ -9,6 +9,10 @@ inputs:
     description: 'arch is either amd64 (default) or `aarch64`. If `aarch64` is cross-compiled from x86.'
     required: false
     default: 'amd64'
+  build_folder:
+    description: 'Choose a build folder'
+    required: false
+    default: 'build'
   build_type:
     description: 'Build Type e.g. Release, Debug. Default: Release'
     required: false
@@ -58,8 +62,10 @@ runs:
       run: choco install -y ninja
 
     - name: Create build folder
+      env:
+        build_folder: ${{ inputs.build_folder }}
       shell: bash
-      run: mkdir build
+      run: mkdir ${build_folder}
 
     - name: Configure Windows build for amd64
       if: ${{ startsWith(runner.os, 'Windows') }}
@@ -78,7 +84,7 @@ runs:
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ..
         cmake --build . --target ${{ inputs.target }}
-      working-directory: ./build
+      working-directory: ./${{ inputs.build_folder }}
 
     - name: Build ${{ inputs.target }} ${{ inputs.arch }}
       if: ${{ startsWith(runner.os, 'Linux') && inputs.arch == 'aarch64' }}
@@ -86,7 +92,7 @@ runs:
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ..
         cmake --build . --target ${{ inputs.target }}
-      working-directory: ./build
+      working-directory: ./${{ inputs.build_folder }}
 
     - name: Build ${{ inputs.target }}
       if: ${{ startsWith(runner.os, 'Windows') }}
@@ -94,5 +100,5 @@ runs:
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.add_cmake_variables }} ..
         cmake --build . --target ${{ inputs.target }}
-      working-directory: ./build
+      working-directory: ./${{ inputs.build_folder }}
 

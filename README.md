@@ -14,6 +14,11 @@ with:
     # Default: 'amd64'
     arch: ''
 
+    # Choose a build folder
+    # Optional arg
+    # Default: 'build'
+    build_folder: ''
+
     # Build Type e.g. Release, Debug
     # Optional arg
     # Default: 'Release'
