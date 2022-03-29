@@ -65,7 +65,7 @@ runs:
       env:
         build_folder: ${{ inputs.build_folder }}
       shell: bash
-      run: mkdir ${build_folder}
+      run: mkdir -p ${build_folder}
 
     - name: Configure Windows build for amd64
       if: ${{ startsWith(runner.os, 'Windows') }}
@@ -82,7 +82,10 @@ runs:
       if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') && inputs.arch == 'amd64') }}
       shell: bash
       run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ..
+        cmake -G ${{ inputs.generator }} \
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+          ${{ inputs.add_cmake_variables }} \
+          ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./${{ inputs.build_folder }}
 
@@ -90,7 +93,11 @@ runs:
       if: ${{ startsWith(runner.os, 'Linux') && inputs.arch == 'aarch64' }}
       shell: bash
       run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ..
+        cmake -G ${{ inputs.generator }} \
+          -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake \
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+          ${{ inputs.add_cmake_variables }} \
+          ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./${{ inputs.build_folder }}
 
@@ -98,7 +105,10 @@ runs:
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
       run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.add_cmake_variables }} ..
+        cmake -G ${{ inputs.generator }} \
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+          ${{ inputs.add_cmake_variables }} \
+          ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./${{ inputs.build_folder }}
 
