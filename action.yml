@@ -105,10 +105,7 @@ runs:
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
       run: |
-        cmake -G ${{ inputs.generator }} \
-          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
-          ${{ inputs.add_cmake_variables }} \
-          ..
+        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.add_cmake_variables }} ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./${{ inputs.build_folder }}
 
