@@ -1,11 +1,15 @@
 name: 'MCU Build Action'
 description: 'Composite Action for building MCU tools'
 inputs:
+  add_cmake_variables:
+    description: 'Add adicional CMake variables to the build. E.g. `-DLIBS_ONLY=ON`'
+    required: false
+    default: ''
   arch:
     description: 'arch is either amd64 (default) or `aarch64`. If `aarch64` is cross-compiled from x86.'
     required: false
     default: 'amd64'
-  build_target:
+  build_type:
     description: 'Build Type e.g. Release, Debug. Default: Release'
     required: false
     default: 'Release'
@@ -40,8 +44,8 @@ runs:
       if: ${{ startsWith(runner.os, 'Linux') && inputs.arch == 'aarch64' }}
       shell: bash
       run: |
+        sudo apt-get install -y \
         sudo apt update
-        sudo apt-get install \
           bc \
           build-essential \
           ninja-build \
@@ -72,7 +76,7 @@ runs:
       if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') && inputs.arch == 'amd64') }}
       shell: bash
       run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
+        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./build
 
@@ -80,7 +84,7 @@ runs:
       if: ${{ startsWith(runner.os, 'Linux') && inputs.arch == 'aarch64' }}
       shell: bash
       run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
+        cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./build
 
@@ -88,7 +92,7 @@ runs:
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
       run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
+        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.add_cmake_variables }} ..
         cmake --build . --target ${{ inputs.target }}
       working-directory: ./build
 
