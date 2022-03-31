@@ -58,7 +58,9 @@ runs:
           build-essential \
           ninja-build \
           gcc-aarch64-linux-gnu \
-          g++-aarch64-linux-gnu
+          g++-aarch64-linux-gnu \
+          qemu-user \
+          qemu-user-static
 
     - name: Install Windows deps
       if: ${{ startsWith(runner.os, 'Windows') }}
