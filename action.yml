@@ -2,7 +2,11 @@ name: 'MCU Build Action'
 description: 'Composite Action for building MCU tools'
 inputs:
   add_cmake_variables:
-    description: 'Add adicional CMake variables to the build. E.g. `-DLIBS_ONLY=ON`'
+    description: 'Add additional CMake variables to the build. E.g. `-DLIBS_ONLY=ON`'
+    required: false
+    default: ''
+  add_cmake_build_args:
+    description: 'Add additional CMake Build args. E.g.: `--config Release`'
     required: false
     default: ''
   arch:
@@ -62,10 +66,9 @@ runs:
       run: choco install -y ninja
 
     - name: Create build folder
-      env:
-        build_folder: ${{ inputs.build_folder }}
       shell: bash
-      run: mkdir -p ${build_folder}
+      run: |
+        mkdir -p ${{ inputs.build_folder }}
 
     - name: Configure Windows build for amd64
       if: ${{ startsWith(runner.os, 'Windows') }}
@@ -78,7 +81,7 @@ runs:
     - uses: ammaraskar/msvc-problem-matcher@master
       if: ${{ startsWith(runner.os, 'Windows') }}
 
-    - name: Build ${{ inputs.target }} ${{ inputs.arch }}
+    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux am64 and macOS
       if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') && inputs.arch == 'amd64') }}
       shell: bash
       run: |
@@ -86,26 +89,34 @@ runs:
           -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
           ${{ inputs.add_cmake_variables }} \
           ..
-        cmake --build . --target ${{ inputs.target }}
+        cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
       working-directory: ./${{ inputs.build_folder }}
 
-    - name: Build ${{ inputs.target }} ${{ inputs.arch }}
+    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux aarch64
       if: ${{ startsWith(runner.os, 'Linux') && inputs.arch == 'aarch64' }}
       shell: bash
       run: |
-        cmake -G ${{ inputs.generator }} \
-          -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake \
+        cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake \
           -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
           ${{ inputs.add_cmake_variables }} \
           ..
-        cmake --build . --target ${{ inputs.target }}
       working-directory: ./${{ inputs.build_folder }}
 
-    - name: Build ${{ inputs.target }}
+    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Windows
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.add_cmake_variables }} ..
-        cmake --build . --target ${{ inputs.target }}
       working-directory: ./${{ inputs.build_folder }}
 
+    - name: Build ${{ inputs.target }} ${{ inputs.arch }} for Windows
+      if: ${{ startsWith(runner.os, 'Windows') }}
+      shell: powershell
+      run: |
+        cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
+
+    - name: Build ${{ inputs.target }} ${{ inputs.arch }}
+      if: ${{ startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') }}
+      shell: bash
+      run: |
+        cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
