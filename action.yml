@@ -114,9 +114,11 @@ runs:
       shell: powershell
       run: |
         cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
+      working-directory: ./${{ inputs.build_folder }}
 
     - name: Build ${{ inputs.target }} ${{ inputs.arch }}
       if: ${{ startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') }}
       shell: bash
       run: |
         cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
+      working-directory: ./${{ inputs.build_folder }}
