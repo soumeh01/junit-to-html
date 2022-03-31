@@ -116,7 +116,7 @@ runs:
         cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
       working-directory: ./${{ inputs.build_folder }}
 
-    - name: Build ${{ inputs.target }} ${{ inputs.arch }}
+    - name: Build ${{ inputs.target }} ${{ inputs.arch }} for Linux and macOS
       if: ${{ startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') }}
       shell: bash
       run: |
