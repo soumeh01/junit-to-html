@@ -4,6 +4,11 @@
 ```yaml
 uses: Arm-Debug/mcu-build-action@v1.1
 with:
+    # Add additional CMake Build args. E.g.: `--config Release`
+    # Optional arg
+    # Default: ''
+    add_cmake_build_args:
+
     # Add adicional CMake variables to the build. E.g. `-DLIBS_ONLY=ON`
     # Optional arg
     # Default: ''
@@ -35,11 +40,23 @@ with:
     target: ''
 ```
 
-## Example
+## Examples
 ```yaml
 - name: Build libdsq
   uses: Arm-Debug/mcu-build-action@v1.1
   id: mcu-build
   with:
     target: dsq
+```
+
+```yaml
+- name: Build swig libs windows
+  if: ${{ startsWith(matrix.runs_on, 'windows') }}
+  uses: Arm-Debug/mcu-build-action@v1.1
+  with:
+    add_cmake_variables: -DSWIG_LIBS=ON
+    add_cmake_build_args: --config Release
+    arch: amd64
+    build_folder: buildswig
+    target: projmgr-python
 ```
