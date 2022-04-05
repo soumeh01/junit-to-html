@@ -87,7 +87,6 @@ runs:
           -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
           ${{ inputs.add_cmake_variables }} \
           ..
-        cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
       working-directory: ./${{ inputs.build_folder }}
 
     - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux aarch64
