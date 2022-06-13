@@ -1,10 +1,23 @@
 name: 'MCU Build Action'
 description: 'Composite Action for building MCU tools'
 inputs:
-  target:
-    description: 'Product to be build e.g. buildmgr'
-    required: true
-  build_target:
+  add_cmake_variables:
+    description: 'Add additional CMake variables to the build. E.g. `-DLIBS_ONLY=ON`'
+    required: false
+    default: ''
+  add_cmake_build_args:
+    description: 'Add additional CMake Build args. E.g.: `--config Release`'
+    required: false
+    default: ''
+  arch:
+    description: 'arch is either amd64 (default) or `aarch64`. If `aarch64` is cross-compiled from x86.'
+    required: false
+    default: 'amd64'
+  build_folder:
+    description: 'Choose a build folder'
+    required: false
+    default: 'build'
+  build_type:
     description: 'Build Type e.g. Release, Debug. Default: Release'
     required: false
     default: 'Release'
@@ -12,6 +25,9 @@ inputs:
     description: 'Build generator e.g. Ninja'
     required: false
     default: 'Ninja'
+  target:
+    description: 'Product to be build e.g. buildmgr'
+    required: true
 runs:
   using: "composite"
   steps:
@@ -21,6 +37,7 @@ runs:
       run: |
         brew install \
           ninja
+
     - name: Install linux deps
       if: ${{ startsWith(runner.os, 'Linux') }}
       shell: bash
@@ -30,6 +47,17 @@ runs:
           bc \
           build-essential \
           ninja-build
+
+    - name: Install linux aarch64 deps
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.arch == 'aarch64' }}
+      shell: bash
+      run: |
+        sudo apt-get install -y \
+          gcc-aarch64-linux-gnu \
+          g++-aarch64-linux-gnu \
+          qemu-user \
+          qemu-user-static
+
     - name: Install Windows deps
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
@@ -37,7 +65,8 @@ runs:
 
     - name: Create build folder
       shell: bash
-      run: mkdir build
+      run: |
+        mkdir -p ${{ inputs.build_folder }}
 
     - name: Configure Windows build for amd64
       if: ${{ startsWith(runner.os, 'Windows') }}
@@ -50,18 +79,43 @@ runs:
     - uses: ammaraskar/msvc-problem-matcher@master
       if: ${{ startsWith(runner.os, 'Windows') }}
 
-    - name: Build ${{ inputs.target }}
-      if: ${{ startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux') }}
+    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux am64 and macOS
+      if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') && inputs.arch == 'amd64') }}
       shell: bash
       run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
-        cmake --build . --target ${{ inputs.target }}
-      working-directory: ./build
+        cmake -G ${{ inputs.generator }} \
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+          ${{ inputs.add_cmake_variables }} \
+          ..
+      working-directory: ./${{ inputs.build_folder }}
 
-    - name: Build ${{ inputs.target }}
+    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux aarch64
+      if: ${{ startsWith(runner.os, 'Linux') && inputs.arch == 'aarch64' }}
+      shell: bash
+      run: |
+        cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake \
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+          ${{ inputs.add_cmake_variables }} \
+          ..
+      working-directory: ./${{ inputs.build_folder }}
+
+    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Windows
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
       run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_target }} ..
-        cmake --build . --target ${{ inputs.target }}
-      working-directory: ./build
+        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.add_cmake_variables }} ..
+      working-directory: ./${{ inputs.build_folder }}
+
+    - name: Build ${{ inputs.target }} ${{ inputs.arch }} for Windows
+      if: ${{ startsWith(runner.os, 'Windows') }}
+      shell: powershell
+      run: |
+        cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
+      working-directory: ./${{ inputs.build_folder }}
+
+    - name: Build ${{ inputs.target }} ${{ inputs.arch }} for Linux and macOS
+      if: ${{ startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') }}
+      shell: bash
+      run: |
+        cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
+      working-directory: ./${{ inputs.build_folder }}
