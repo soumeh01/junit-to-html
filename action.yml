@@ -10,7 +10,7 @@ inputs:
     required: false
     default: ''
   arch:
-    description: 'arch is either amd64 (default) or `aarch64|arm64`. If `aarch64` is cross-compiled from x86.'
+    description: 'arch is either amd64 (default) or `arm64`. If `arm64` is cross-compiled from x86.'
     required: false
     default: 'amd64'
   build_folder:
@@ -48,8 +48,8 @@ runs:
           build-essential \
           ninja-build
 
-    - name: Install linux aarch64 deps
-      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'aarch64' || inputs.arch == 'arm64') }}
+    - name: Install linux arm64 deps
+      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64' || inputs.arch == 'arm64') }}
       shell: bash
       run: |
         sudo apt-get install -y \
@@ -89,8 +89,8 @@ runs:
           ..
       working-directory: ./${{ inputs.build_folder }}
 
-    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux aarch64
-      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'aarch64' || inputs.arch == 'arm64') }}
+    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux arm64
+      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64' || inputs.arch == 'arm64') }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake \

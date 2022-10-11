@@ -2,7 +2,7 @@
 ## Usage
 
 ```yaml
-uses: Open-CMSIS-Pack/devtools-build-action@v1.1
+uses: Open-CMSIS-Pack/devtools-build-action@v1.2
 with:
     # Add additional CMake Build args. E.g.: `--config Release`
     # Optional arg
@@ -14,7 +14,7 @@ with:
     # Default: ''
     add_cmake_variables: ''
 
-    # arch is either amd64 (default) or `aarch64`. If `aarch64` is cross-compiled from x86.
+    # arch is either amd64 (default) or `arm64`. If `arm64` is cross-compiled from x86.
     # Optional arg
     # Default: 'amd64'
     arch: ''
@@ -43,7 +43,7 @@ with:
 ## Examples
 ```yaml
 - name: Build libdsq
-  uses: Open-CMSIS-Pack/devtools-build-action@v1.1
+  uses: Open-CMSIS-Pack/devtools-build-action@v1.2
   id: mcu-build
   with:
     target: dsq
@@ -52,7 +52,7 @@ with:
 ```yaml
 - name: Build swig libs windows
   if: ${{ startsWith(matrix.runs_on, 'windows') }}
-  uses: Open-CMSIS-Pack/devtools-build-action@v1.1
+  uses: Open-CMSIS-Pack/devtools-build-action@v1.2
   with:
     add_cmake_variables: -DSWIG_LIBS=ON
     add_cmake_build_args: --config Release
