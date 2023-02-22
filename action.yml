@@ -38,7 +38,7 @@ runs:
         brew install \
           ninja
 
-    - name: Install linux deps
+    - name: Install Linux deps
       if: ${{ startsWith(runner.os, 'Linux') }}
       shell: bash
       run: |
@@ -48,8 +48,8 @@ runs:
           build-essential \
           ninja-build
 
-    - name: Install linux arm64 deps
-      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64' || inputs.arch == 'arm64') }}
+    - name: Install Linux-arm64 deps
+      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64') }}
       shell: bash
       run: |
         sudo apt-get install -y \
@@ -68,19 +68,19 @@ runs:
       run: |
         mkdir -p ${{ inputs.build_folder }}
 
-    - name: Configure Windows build for amd64
+    - name: Configure Windows build
       if: ${{ startsWith(runner.os, 'Windows') }}
       uses: ilammy/msvc-dev-cmd@v1
       with:
-        arch: amd64
+        arch: "${{ inputs.arch != 'amd64' && 'amd64_' }}${{ inputs.arch }}"
 
     - uses: ammaraskar/gcc-problem-matcher@master
       if: ${{ startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux') }}
     - uses: ammaraskar/msvc-problem-matcher@master
       if: ${{ startsWith(runner.os, 'Windows') }}
 
-    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux am64 and macOS
-      if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') && inputs.arch == 'amd64') }}
+    - name: Generate ${{ inputs.target }} for Linux--${{ inputs.arch }} and macOS-${{ inputs.arch }}
+      if: ${{ (startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux')) && (inputs.arch == 'amd64') }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} \
@@ -89,8 +89,8 @@ runs:
           ..
       working-directory: ./${{ inputs.build_folder }}
 
-    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux arm64
-      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64' || inputs.arch == 'arm64') }}
+    - name: Generate ${{ inputs.target }} for Linux-${{ inputs.arch }}
+      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64') }}
       shell: bash
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake \
@@ -99,21 +99,32 @@ runs:
           ..
       working-directory: ./${{ inputs.build_folder }}
 
-    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Windows
+    - name: Generate ${{ inputs.target }} for maxOS--${{ inputs.arch }}
+      if: ${{ startsWith(runner.os, 'macOS') && (inputs.arch == 'arm64') }}
+      shell: bash
+      run: |
+        cmake -G ${{ inputs.generator }} \
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+          -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+          ${{ inputs.add_cmake_variables }} \
+          ..
+      working-directory: ./${{ inputs.build_folder }}
+
+    - name: Generate ${{ inputs.target }} for Windows-${{ inputs.arch }}
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
       run: |
         cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.add_cmake_variables }} ..
       working-directory: ./${{ inputs.build_folder }}
 
-    - name: Build ${{ inputs.target }} ${{ inputs.arch }} for Windows
+    - name: Build ${{ inputs.target }} for Windows-${{ inputs.arch }}
       if: ${{ startsWith(runner.os, 'Windows') }}
       shell: powershell
       run: |
         cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
       working-directory: ./${{ inputs.build_folder }}
 
-    - name: Build ${{ inputs.target }} ${{ inputs.arch }} for Linux and macOS
+    - name: Build ${{ inputs.target }} for Linux-${{ inputs.arch }} or macOS-${{ inputs.arch }}
       if: ${{ startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') }}
       shell: bash
       run: |
