@@ -72,7 +72,7 @@ runs:
       if: ${{ startsWith(runner.os, 'Windows') }}
       uses: ilammy/msvc-dev-cmd@v1
       with:
-        arch: "${{ inputs.arch != 'amd64' && 'amd64_' }}${{ inputs.arch }}"
+        arch: "${{ inputs.arch != 'amd64' && 'amd64_' || '' }}${{ inputs.arch }}"
 
     - uses: ammaraskar/gcc-problem-matcher@master
       if: ${{ startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux') }}
@@ -105,7 +105,7 @@ runs:
       run: |
         cmake -G ${{ inputs.generator }} \
           -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
-          -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+          -DCMAKE_OSX_ARCHITECTURES=arm64 \
           ${{ inputs.add_cmake_variables }} \
           ..
       working-directory: ./${{ inputs.build_folder }}
