@@ -1,121 +1,33 @@
 name: 'MCU Build Action'
 description: 'Composite Action for building MCU tools'
 inputs:
-  add_cmake_variables:
-    description: 'Add additional CMake variables to the build. E.g. `-DLIBS_ONLY=ON`'
-    required: false
-    default: ''
-  add_cmake_build_args:
-    description: 'Add additional CMake Build args. E.g.: `--config Release`'
-    required: false
-    default: ''
-  arch:
-    description: 'arch is either amd64 (default) or `arm64`. If `arm64` is cross-compiled from x86.'
-    required: false
-    default: 'amd64'
-  build_folder:
-    description: 'Choose a build folder'
-    required: false
-    default: 'build'
-  build_type:
-    description: 'Build Type e.g. Release, Debug. Default: Release'
-    required: false
-    default: 'Release'
-  generator:
-    description: 'Build generator e.g. Ninja'
-    required: false
-    default: 'Ninja'
-  target:
-    description: 'Product to be build e.g. buildmgr'
+  junit_files:
+    description: 'Path of the junit files'
     required: true
+  output_file:
+    description: 'output html file path'
+    required: false
+    default: "./test_report.html"
 runs:
   using: "composite"
   steps:
-    - name: Install macOS deps
-      if: ${{ startsWith(runner.os, 'macOS') }}
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      # with:
+      #   python-version: '3.10'
+
+    - name: Install dependencies
       shell: bash
       run: |
-        brew install \
-          ninja
+        python -m pip install --upgrade pip
+        pip install -r $GITHUB_ACTION_PATH/scripts/requirements.txt
 
-    - name: Install linux deps
-      if: ${{ startsWith(runner.os, 'Linux') }}
+    - name: Merge junit test reports
       shell: bash
       run: |
-        sudo apt update
-        sudo apt-get install \
-          bc \
-          build-essential \
-          ninja-build
+        python scripts/merge_test_reports.py -i ./${{ inputs.junit_files }} -o ./merged_test_results.xml
 
-    - name: Install linux arm64 deps
-      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64' || inputs.arch == 'arm64') }}
+    - name: Generate HTML reports
       shell: bash
       run: |
-        sudo apt-get install -y \
-          gcc-aarch64-linux-gnu \
-          g++-aarch64-linux-gnu \
-          qemu-user \
-          qemu-user-static
-
-    - name: Install Windows deps
-      if: ${{ startsWith(runner.os, 'Windows') }}
-      shell: powershell
-      run: choco install -y ninja
-
-    - name: Create build folder
-      shell: bash
-      run: |
-        mkdir -p ${{ inputs.build_folder }}
-
-    - name: Configure Windows build for amd64
-      if: ${{ startsWith(runner.os, 'Windows') }}
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: amd64
-
-    - uses: ammaraskar/gcc-problem-matcher@master
-      if: ${{ startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux') }}
-    - uses: ammaraskar/msvc-problem-matcher@master
-      if: ${{ startsWith(runner.os, 'Windows') }}
-
-    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux am64 and macOS
-      if: ${{ startsWith(runner.os, 'macOS') || (startsWith(runner.os, 'Linux') && inputs.arch == 'amd64') }}
-      shell: bash
-      run: |
-        cmake -G ${{ inputs.generator }} \
-          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
-          ${{ inputs.add_cmake_variables }} \
-          ..
-      working-directory: ./${{ inputs.build_folder }}
-
-    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Linux arm64
-      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64' || inputs.arch == 'arm64') }}
-      shell: bash
-      run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_TOOLCHAIN_FILE=../cmake/TC-linux-aarch64.cmake \
-          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
-          ${{ inputs.add_cmake_variables }} \
-          ..
-      working-directory: ./${{ inputs.build_folder }}
-
-    - name: Generate ${{ inputs.target }} ${{ inputs.arch }} for Windows
-      if: ${{ startsWith(runner.os, 'Windows') }}
-      shell: powershell
-      run: |
-        cmake -G ${{ inputs.generator }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.add_cmake_variables }} ..
-      working-directory: ./${{ inputs.build_folder }}
-
-    - name: Build ${{ inputs.target }} ${{ inputs.arch }} for Windows
-      if: ${{ startsWith(runner.os, 'Windows') }}
-      shell: powershell
-      run: |
-        cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
-      working-directory: ./${{ inputs.build_folder }}
-
-    - name: Build ${{ inputs.target }} ${{ inputs.arch }} for Linux and macOS
-      if: ${{ startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') }}
-      shell: bash
-      run: |
-        cmake --build . --target ${{ inputs.target }} ${{ inputs.add_cmake_build_args}}
-      working-directory: ./${{ inputs.build_folder }}
+        junit2html ./merged_test_results.xml ./${{ inputs.output_file }}
