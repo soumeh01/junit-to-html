@@ -31,6 +31,7 @@ class ReportsMerger:
 
         logging.info(f"Writing merged report to '{mergeFile}' ...")
         mergedXML.write(mergeFile)
+        return 0
 
     def __udpate_testsuite_name(self, filename: str, prefix: str):
         xml = JUnitXml.fromfile(filename)
