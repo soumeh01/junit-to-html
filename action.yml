@@ -1,11 +1,11 @@
-name: 'MCU Build Action'
-description: 'Composite Action for building MCU tools'
+name: 'JUnit to HTML'
+description: 'Merge JUnit files and generate consolidated HTML report'
 inputs:
   junit_files:
-    description: 'Path of the junit files'
+    description: 'Path of the JUnit files'
     required: true
   output_file:
-    description: 'output html file path'
+    description: 'Output HTML file path'
     required: false
     default: "./test_report.html"
 runs:
@@ -14,7 +14,7 @@ runs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: '3.x'
 
     - name: Install dependencies
       shell: bash
