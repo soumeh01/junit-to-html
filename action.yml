@@ -49,7 +49,7 @@ runs:
           ninja-build
 
     - name: Install linux arm64 deps
-      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64' || inputs.arch == 'arm64') }}
+      if: ${{ startsWith(runner.os, 'Linux') && (inputs.arch == 'arm64') }}
       shell: bash
       run: |
         sudo apt-get install -y \
