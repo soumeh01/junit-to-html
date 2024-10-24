@@ -36,7 +36,9 @@ runs:
       shell: bash
       run: |
         brew install \
-          ninja
+          ninja \
+          doxygen \
+          swig
 
     - name: Install Linux deps
       if: ${{ startsWith(runner.os, 'Linux') }}
